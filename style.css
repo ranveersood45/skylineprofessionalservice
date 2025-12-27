@@ -424,5 +424,76 @@ footer {
   object-fit: cover;
   border: 1px solid #374151;
 }
+/* ABOUT SECTION STYLING */
+.content-section {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 0 20px;
+}
 
+.content-section h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.content-section p {
+  font-size: 16px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-bottom: 25px;
+}
+
+/* ABOUT POINTS LIST */
+.about-points {
+/* CONTACT SECTION */
+.contact-details p {
+  font-size: 16px;
+  color: var(--text);
+  margin-bottom: 14px;
+}
+
+.contact-details a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.contact-details a:hover {
+  text-decoration: underline;
+}
+
+/* CONTACT LINK COLOR FIX */
+.contact-details a {
+  color: var(--text);        /* same as normal text */
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.contact-details a:hover {
+  color: var(--accent);     /* accent color on hover */
+  text-decoration: underline;
+}
+/* FORCE CONTACT LINK COLOR */
+section.content-section .contact-details a,
+section.content-section .contact-details a:visited {
+  color: #e5e7eb !important;   /* professional light text */
+  text-decoration: none !important;
+}
+
+section.content-section .contact-details a:hover {
+  color: #2563eb !important;   /* accent color */
+  text-decoration: underline;
+}
+/* HIGHLIGHT SEPARATE SECTION */
+.highlight-section {
+  margin-top: 60px;
+  padding: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.highlight-section h3 {
+  margin-top: 0;
+}
 
