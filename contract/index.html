@@ -52,6 +52,7 @@ canvas {
     width: 100%;
     height: 150px;
     margin-bottom: 10px;
+    touch-action: none;
 }
 </style>
 
@@ -59,69 +60,75 @@ canvas {
 function fillData() {
     const p = new URLSearchParams(window.location.search);
 
-    // Display data
-    document.getElementById("vehicle").innerText = p.get("vehicle") || "";
-    document.getElementById("condition").innerText = p.get("condition") || "";
-    document.getElementById("pickup").innerText = p.get("pickup") || "";
-    document.getElementById("pzip").innerText = p.get("pzip") || "";
-    document.getElementById("delivery").innerText = p.get("delivery") || "";
-    document.getElementById("dzip").innerText = p.get("dzip") || "";
-    document.getElementById("date").innerText = p.get("date") || "";
-    document.getElementById("price").innerText = p.get("price") || "";
-
-    // Send same data to FormSubmit hidden fields
-    document.getElementById("form_vehicle").value = p.get("vehicle") || "";
-    document.getElementById("form_condition").value = p.get("condition") || "";
-    document.getElementById("form_pickup").value = p.get("pickup") || "";
-    document.getElementById("form_pzip").value = p.get("pzip") || "";
-    document.getElementById("form_delivery").value = p.get("delivery") || "";
-    document.getElementById("form_dzip").value = p.get("dzip") || "";
-    document.getElementById("form_date").value = p.get("date") || "";
-    document.getElementById("form_price").value = p.get("price") || "";
+    const fields = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"];
+    fields.forEach(f => {
+        document.getElementById(f).innerText = p.get(f) || "";
+        document.getElementById("form_" + f).value = p.get(f) || "";
+    });
 }
 
-// Signature pad variables
 let canvas, ctx, drawing = false;
-let lastX = 0, lastY = 0;
 
 function initSignaturePad() {
     canvas = document.getElementById('signature-pad');
     ctx = canvas.getContext('2d');
 
-    // Match canvas coordinate system to display size
-    const style = getComputedStyle(canvas);
-    canvas.width = parseInt(style.width);
-    canvas.height = parseInt(style.height);
+    resizeCanvas();
 
-    canvas.addEventListener('mousedown', (e) => {
-        drawing = true;
-        const rect = canvas.getBoundingClientRect();
-        lastX = e.clientX - rect.left;
-        lastY = e.clientY - rect.top;
-    });
+    window.addEventListener("resize", resizeCanvas);
 
-    canvas.addEventListener('mouseup', () => drawing = false);
-    canvas.addEventListener('mouseout', () => drawing = false);
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mouseup', stopDraw);
+    canvas.addEventListener('mouseout', stopDraw);
     canvas.addEventListener('mousemove', draw);
+
+    // Mobile support
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchend', stopDraw);
+    canvas.addEventListener('touchmove', draw);
+}
+
+function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+}
+
+function getPosition(e) {
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches) {
+        return {
+            x: e.touches[0].clientX - rect.left,
+            y: e.touches[0].clientY - rect.top
+        };
+    }
+    return {
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+    };
+}
+
+function startDraw(e) {
+    drawing = true;
+    const pos = getPosition(e);
+    ctx.beginPath();
+    ctx.moveTo(pos.x, pos.y);
+}
+
+function stopDraw() {
+    drawing = false;
 }
 
 function draw(e) {
     if (!drawing) return;
+    e.preventDefault();
 
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
+    const pos = getPosition(e);
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.strokeStyle = '#000';
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
+    ctx.lineTo(pos.x, pos.y);
     ctx.stroke();
-
-    lastX = x;
-    lastY = y;
 
     document.getElementById('signature-input').value = canvas.toDataURL();
 }
@@ -129,6 +136,15 @@ function draw(e) {
 function clearSignature() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     document.getElementById('signature-input').value = '';
+}
+
+function validateForm() {
+    const signature = document.getElementById('signature-input').value;
+    if (!signature) {
+        alert("Please provide your signature before confirming.");
+        return false;
+    }
+    return true;
 }
 
 window.onload = function() {
@@ -152,7 +168,6 @@ SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordinati
         <div class="label">Vehicle</div>
         <div id="vehicle"></div>
     </div>
-
     <div style="flex:1;">
         <div class="label">Condition</div>
         <div id="condition"></div>
@@ -166,7 +181,6 @@ SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordinati
         <div class="label">Pickup Address</div>
         <div id="pickup"></div>
     </div>
-
     <div style="flex:1;">
         <div class="label">Pickup ZIP Code</div>
         <div id="pzip"></div>
@@ -178,7 +192,6 @@ SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordinati
         <div class="label">Dropoff Address</div>
         <div id="delivery"></div>
     </div>
-
     <div style="flex:1;">
         <div class="label">Dropoff ZIP Code</div>
         <div id="dzip"></div>
@@ -192,7 +205,6 @@ SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordinati
         <div class="label">Estimated Pickup Date</div>
         <div id="date"></div>
     </div>
-
     <div style="flex:1;">
         <div class="label">Total Price</div>
         <div>$<span id="price"></span></div>
@@ -204,26 +216,28 @@ SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordinati
 <h3>Terms & Agreement</h3>
 <p>
 By confirming your booking below, you are securing your vehicle shipment with 
-SkyLine Professional Logistics LLC. Our team will coordinate with our trusted, licensed, and insured 
-carrier network to ensure a smooth and professional transport experience.
+SkyLine Professional Logistics LLC.
 </p>
 
-<form action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
+<form action="https://formsubmit.co/ranveer.sood45@gmail.com"
+      method="POST"
+      onsubmit="return validateForm()">
 
 <input type="hidden" name="_captcha" value="false">
 <input type="hidden" name="_subject" value="New Booking Confirmation - SkyLine Professional Logistics">
+
+<!-- PAYPAL REDIRECT -->
 <input type="hidden" name="_next" value="https://www.paypal.com/ncp/payment/9BNVYPTVTJZDL">
 
-<input type="hidden" name="Vehicle" id="form_vehicle">
-<input type="hidden" name="Condition" id="form_condition">
-<input type="hidden" name="Pickup Location" id="form_pickup">
-<input type="hidden" name="Pickup ZIP" id="form_pzip">
-<input type="hidden" name="Delivery Location" id="form_delivery">
-<input type="hidden" name="Delivery ZIP" id="form_dzip">
-<input type="hidden" name="Pickup Date" id="form_date">
-<input type="hidden" name="Quoted Price" id="form_price">
+<input type="hidden" name="vehicle" id="form_vehicle">
+<input type="hidden" name="condition" id="form_condition">
+<input type="hidden" name="pickup" id="form_pickup">
+<input type="hidden" name="pzip" id="form_pzip">
+<input type="hidden" name="delivery" id="form_delivery">
+<input type="hidden" name="dzip" id="form_dzip">
+<input type="hidden" name="date" id="form_date">
+<input type="hidden" name="price" id="form_price">
 
-<!-- Signature Pad -->
 <div>
     <label><strong>Sign Here:</strong></label>
     <canvas id="signature-pad"></canvas>
