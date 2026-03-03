@@ -1,1 +1,244 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Vehicle Transport Agreement | SkyLine Professional Logistics LLC</title>
 
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 850px;
+    margin: auto;
+    padding: 30px;
+    color: #222;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 5px;
+}
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: gray;
+    margin-bottom: 30px;
+}
+.section {
+    background: #f8f8f8;
+    padding: 25px;
+    border-radius: 6px;
+    margin-bottom: 25px;
+}
+.row {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 15px;
+}
+.label {
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+hr {
+    border: none;
+    border-top: 1px solid #ddd;
+    margin: 20px 0;
+}
+button {
+    padding: 12px 30px;
+    font-size: 15px;
+    cursor: pointer;
+}
+canvas {
+    border: 1px solid #ccc;
+    width: 100%;
+    height: 150px;
+    margin-bottom: 10px;
+}
+</style>
+
+<script>
+function fillData() {
+    const p = new URLSearchParams(window.location.search);
+
+    // Display data
+    document.getElementById("vehicle").innerText = p.get("vehicle") || "";
+    document.getElementById("condition").innerText = p.get("condition") || "";
+    document.getElementById("pickup").innerText = p.get("pickup") || "";
+    document.getElementById("pzip").innerText = p.get("pzip") || "";
+    document.getElementById("delivery").innerText = p.get("delivery") || "";
+    document.getElementById("dzip").innerText = p.get("dzip") || "";
+    document.getElementById("date").innerText = p.get("date") || "";
+    document.getElementById("price").innerText = p.get("price") || "";
+
+    // Send same data to FormSubmit hidden fields
+    document.getElementById("form_vehicle").value = p.get("vehicle") || "";
+    document.getElementById("form_condition").value = p.get("condition") || "";
+    document.getElementById("form_pickup").value = p.get("pickup") || "";
+    document.getElementById("form_pzip").value = p.get("pzip") || "";
+    document.getElementById("form_delivery").value = p.get("delivery") || "";
+    document.getElementById("form_dzip").value = p.get("dzip") || "";
+    document.getElementById("form_date").value = p.get("date") || "";
+    document.getElementById("form_price").value = p.get("price") || "";
+}
+
+// Signature pad variables
+let canvas, ctx, drawing = false;
+let lastX = 0, lastY = 0;
+
+function initSignaturePad() {
+    canvas = document.getElementById('signature-pad');
+    ctx = canvas.getContext('2d');
+
+    // Match canvas coordinate system to display size
+    const style = getComputedStyle(canvas);
+    canvas.width = parseInt(style.width);
+    canvas.height = parseInt(style.height);
+
+    canvas.addEventListener('mousedown', (e) => {
+        drawing = true;
+        const rect = canvas.getBoundingClientRect();
+        lastX = e.clientX - rect.left;
+        lastY = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener('mouseup', () => drawing = false);
+    canvas.addEventListener('mouseout', () => drawing = false);
+    canvas.addEventListener('mousemove', draw);
+}
+
+function draw(e) {
+    if (!drawing) return;
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+
+    ctx.lineWidth = 2;
+    ctx.lineCap = 'round';
+    ctx.strokeStyle = '#000';
+    ctx.beginPath();
+    ctx.moveTo(lastX, lastY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+
+    lastX = x;
+    lastY = y;
+
+    document.getElementById('signature-input').value = canvas.toDataURL();
+}
+
+function clearSignature() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    document.getElementById('signature-input').value = '';
+}
+
+window.onload = function() {
+    fillData();
+    initSignaturePad();
+};
+</script>
+</head>
+
+<body>
+
+<h1>Vehicle Transport Agreement</h1>
+<div class="subtitle">
+SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordination
+</div>
+
+<div class="section">
+
+<div class="row">
+    <div style="flex:2;">
+        <div class="label">Vehicle</div>
+        <div id="vehicle"></div>
+    </div>
+
+    <div style="flex:1;">
+        <div class="label">Condition</div>
+        <div id="condition"></div>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div style="flex:2;">
+        <div class="label">Pickup Address</div>
+        <div id="pickup"></div>
+    </div>
+
+    <div style="flex:1;">
+        <div class="label">Pickup ZIP Code</div>
+        <div id="pzip"></div>
+    </div>
+</div>
+
+<div class="row">
+    <div style="flex:2;">
+        <div class="label">Dropoff Address</div>
+        <div id="delivery"></div>
+    </div>
+
+    <div style="flex:1;">
+        <div class="label">Dropoff ZIP Code</div>
+        <div id="dzip"></div>
+    </div>
+</div>
+
+<hr>
+
+<div class="row">
+    <div style="flex:2;">
+        <div class="label">Estimated Pickup Date</div>
+        <div id="date"></div>
+    </div>
+
+    <div style="flex:1;">
+        <div class="label">Total Price</div>
+        <div>$<span id="price"></span></div>
+    </div>
+</div>
+
+</div>
+
+<h3>Terms & Agreement</h3>
+<p>
+By confirming your booking below, you are securing your vehicle shipment with 
+SkyLine Professional Logistics LLC. Our team will coordinate with our trusted, licensed, and insured 
+carrier network to ensure a smooth and professional transport experience.
+</p>
+
+<form action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
+
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_subject" value="New Booking Confirmation - SkyLine Professional Logistics">
+<input type="hidden" name="_next" value="https://www.paypal.com/ncp/payment/9BNVYPTVTJZDL">
+
+<input type="hidden" name="Vehicle" id="form_vehicle">
+<input type="hidden" name="Condition" id="form_condition">
+<input type="hidden" name="Pickup Location" id="form_pickup">
+<input type="hidden" name="Pickup ZIP" id="form_pzip">
+<input type="hidden" name="Delivery Location" id="form_delivery">
+<input type="hidden" name="Delivery ZIP" id="form_dzip">
+<input type="hidden" name="Pickup Date" id="form_date">
+<input type="hidden" name="Quoted Price" id="form_price">
+
+<!-- Signature Pad -->
+<div>
+    <label><strong>Sign Here:</strong></label>
+    <canvas id="signature-pad"></canvas>
+    <button type="button" onclick="clearSignature()">Clear Signature</button>
+    <input type="hidden" name="Signature" id="signature-input">
+</div>
+
+<p>
+    <input type="checkbox" required>
+    I confirm the above information is accurate and agree to proceed.
+</p>
+
+<button type="submit">Confirm Booking</button>
+
+</form>
+
+</body>
+</html>
