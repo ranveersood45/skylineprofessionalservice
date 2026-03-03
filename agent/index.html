@@ -1,1 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>SkyLine Agent Contract Link Generator</title>
 
+<style>
+body {
+    font-family: Arial, sans-serif;
+    max-width: 700px;
+    margin: auto;
+    padding: 40px;
+}
+h1 {
+    text-align: center;
+    margin-bottom: 30px;
+}
+input, select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+button {
+    padding: 12px;
+    font-size: 15px;
+    cursor: pointer;
+    width: 100%;
+}
+.result {
+    margin-top: 20px;
+    background: #f4f4f4;
+    padding: 15px;
+    word-break: break-all;
+}
+.copy-btn {
+    margin-top: 10px;
+}
+</style>
+
+<script>
+function generateLink() {
+
+    const vehicle = encodeURIComponent(document.getElementById("vehicle").value);
+    const condition = encodeURIComponent(document.getElementById("condition").value);
+    const pickup = encodeURIComponent(document.getElementById("pickup").value);
+    const pzip = encodeURIComponent(document.getElementById("pzip").value);
+    const delivery = encodeURIComponent(document.getElementById("delivery").value);
+    const dzip = encodeURIComponent(document.getElementById("dzip").value);
+    const date = encodeURIComponent(document.getElementById("date").value);
+    const price = encodeURIComponent(document.getElementById("price").value);
+
+    const baseURL = "http://skylineprofessionalservice.online/contract/";
+
+    const link = baseURL +
+        "?vehicle=" + vehicle +
+        "&condition=" + condition +
+        "&pickup=" + pickup +
+        "&pzip=" + pzip +
+        "&delivery=" + delivery +
+        "&dzip=" + dzip +
+        "&date=" + date +
+        "&price=" + price;
+
+    document.getElementById("result").innerText = link;
+}
+
+function copyLink() {
+    const text = document.getElementById("result").innerText;
+    navigator.clipboard.writeText(text);
+    alert("Link copied!");
+}
+</script>
+</head>
+
+<body>
+
+<h1>SkyLine Agent Contract Link Generator</h1>
+
+<input type="text" id="vehicle" placeholder="Vehicle (Example: Honda 2011)">
+
+<select id="condition">
+    <option value="Operable">Operable</option>
+    <option value="Inoperable">Inoperable</option>
+</select>
+
+<input type="text" id="pickup" placeholder="Pickup City, State">
+<input type="text" id="pzip" placeholder="Pickup ZIP Code">
+<input type="text" id="delivery" placeholder="Delivery City, State">
+<input type="text" id="dzip" placeholder="Delivery ZIP Code">
+<input type="text" id="date" placeholder="Pickup Date (Example: March 10)">
+<input type="text" id="price" placeholder="Total Price (Example: 1150)">
+
+<button onclick="generateLink()">Generate Contract Link</button>
+
+<div class="result" id="result"></div>
+
+<button class="copy-btn" onclick="copyLink()">Copy Link</button>
+
+</body>
+</html>
