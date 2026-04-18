@@ -2,42 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>SkyLine Agent Contract Link Generator</title>
+<title>Agent Contract Link Generator | SkyLine Professional Logistics LLC</title>
 
 <style>
-body {
-    font-family: Arial, sans-serif;
-    max-width: 700px;
-    margin: auto;
-    padding: 40px;
-}
-h1 {
-    text-align: center;
-    margin-bottom: 30px;
-}
-input, select {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    font-size: 14px;
-}
-button {
-    padding: 12px;
-    font-size: 15px;
-    cursor: pointer;
-    width: 100%;
-}
-.result {
-    margin-top: 20px;
-    background: #f4f4f4;
-    padding: 15px;
-    word-break: break-all;
-}
-.copy-btn {
-    margin-top: 10px;
-}
+body { font-family: Arial; max-width: 700px; margin: auto; padding: 40px; }
+h1 { text-align: center; margin-bottom: 30px; }
+input, select { width: 100%; padding: 10px; margin-bottom: 15px; font-size: 14px; }
+button { padding: 12px; font-size: 15px; cursor: pointer; width: 100%; }
+.result { margin-top: 20px; background: #f4f4f4; padding: 15px; word-break: break-all; }
+.copy-btn { margin-top: 10px; }
 </style>
-
+<!-- deploy fix -->
 <script>
 function generateLink() {
 
@@ -50,18 +25,13 @@ function generateLink() {
     const date = encodeURIComponent(document.getElementById("date").value);
     const price = encodeURIComponent(document.getElementById("price").value);
 
-    const baseURL = "http://skylineprofessionalservice.online/contract/";
+    // NEW FIELDS
+    const name = encodeURIComponent(document.getElementById("name").value);
+    const email = encodeURIComponent(document.getElementById("email").value);
+    const phone = encodeURIComponent(document.getElementById("phone").value);
 
-    const link = baseURL +
-        "?vehicle=" + vehicle +
-        "&condition=" + condition +
-        "&pickup=" + pickup +
-        "&pzip=" + pzip +
-        "&delivery=" + delivery +
-        "&dzip=" + dzip +
-        "&date=" + date +
-        "&price=" + price;
-
+const link = `https://skylineprofessionalservice.online/contract/?vehicle=${vehicle}&condition=${condition}&pickup=${pickup}&pzip=${pzip}&delivery=${delivery}&dzip=${dzip}&date=${date}&price=${price}&name=${name}&email=${email}&phone=${phone}`;
+    
     document.getElementById("result").innerText = link;
 }
 
@@ -74,16 +44,19 @@ function copyLink() {
 </head>
 
 <body>
+<h1>Agent Contract Link Generator</h1>
 
-<h1>SkyLine Agent Contract Link Generator</h1>
+<!-- NEW CUSTOMER DETAILS -->
+<input type="text" id="name" placeholder="Customer Name">
+<input type="email" id="email" placeholder="Customer Email">
+<input type="text" id="phone" placeholder="Customer Phone">
 
+<!-- EXISTING FIELDS -->
 <input type="text" id="vehicle" placeholder="Vehicle (Example: Honda 2011)">
-
 <select id="condition">
     <option value="Operable">Operable</option>
     <option value="Inoperable">Inoperable</option>
 </select>
-
 <input type="text" id="pickup" placeholder="Pickup City, State">
 <input type="text" id="pzip" placeholder="Pickup ZIP Code">
 <input type="text" id="delivery" placeholder="Delivery City, State">
