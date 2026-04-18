@@ -6,49 +6,57 @@
 
 <style>
 body {
-    font-family: Arial, sans-serif;
+    font-family: Arial;
     max-width: 850px;
     margin: auto;
     padding: 30px;
     color: #222;
+    background: #eef2f7;
 }
-h1 {
-    text-align: center;
-    margin-bottom: 5px;
-}
-.subtitle {
-    text-align: center;
-    font-size: 14px;
-    color: gray;
-    margin-bottom: 30px;
-}
-.section {
-    background: #f8f8f8;
+
+.container {
+    background: #fff;
     padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+}
+
+h1 { text-align: center; margin-bottom: 5px; }
+.subtitle { text-align: center; font-size: 14px; color: gray; margin-bottom: 30px; }
+
+.section {
+    background: #f8faff;
+    padding: 20px;
     border-radius: 6px;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
+    border: 1px solid #d9e2ec;
 }
-.row {
-    display: flex;
-    gap: 40px;
-    margin-bottom: 15px;
+
+.row { display: flex; gap: 20px; margin-bottom: 15px; }
+.label { font-weight: bold; margin-bottom: 4px; font-size: 13px; color: #555; }
+
+input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
 }
-.label {
-    font-weight: bold;
-    margin-bottom: 4px;
-}
-hr {
-    border: none;
-    border-top: 1px solid #ddd;
-    margin: 20px 0;
-}
+
+hr { border: none; border-top: 1px solid #ddd; margin: 20px 0; }
+
 button {
     padding: 12px 30px;
     font-size: 15px;
     cursor: pointer;
+    margin-top: 10px;
+    background: #1f3c88;
+    color: white;
+    border: none;
+    border-radius: 5px;
 }
+
 canvas {
-    border: 1px solid #ccc;
+    border: 2px dashed #aaa;
     width: 100%;
     height: 150px;
     margin-bottom: 10px;
@@ -57,202 +65,306 @@ canvas {
 </style>
 
 <script>
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbysoI93FvoTxgNSr3sdpkREn9RA4qW7LBUryrnWxroRe_KzhTv0KND4azrggwHH8v662Q/exec";
+
+let userIP = "Fetching...";
+
+// Get IP
+fetch("https://api.ipify.org?format=json")
+.then(res => res.json())
+.then(data => { userIP = data.ip; });
+
+// Prefill contract fields
 function fillData() {
     const p = new URLSearchParams(window.location.search);
 
-    const fields = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"];
-    fields.forEach(f => {
-        document.getElementById(f).innerText = p.get(f) || "";
-        document.getElementById("form_" + f).value = p.get(f) || "";
+    ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].forEach(id => {
+        const val = p.get(id) || "";
+        document.getElementById(id).innerText = val;
+        document.getElementById("form_"+id).value = val;
     });
+
+    document.getElementById("name").value = p.get("name") || "";
+    document.getElementById("email").value = p.get("email") || "";
+    document.getElementById("phone").value = p.get("phone") || "";
 }
 
-let canvas, ctx, drawing = false;
-
+// Signature pad
+let canvas, ctx, drawing=false, lastX=0, lastY=0;
 function initSignaturePad() {
-    canvas = document.getElementById('signature-pad');
-    ctx = canvas.getContext('2d');
+    canvas = document.getElementById("signature-pad");
+    ctx = canvas.getContext("2d");
+    const style = getComputedStyle(canvas);
+    canvas.width = parseInt(style.width);
+    canvas.height = parseInt(style.height);
 
-    resizeCanvas();
-
-    window.addEventListener("resize", resizeCanvas);
-
-    canvas.addEventListener('mousedown', startDraw);
-    canvas.addEventListener('mouseup', stopDraw);
-    canvas.addEventListener('mouseout', stopDraw);
-    canvas.addEventListener('mousemove', draw);
-
-    // Mobile support
-    canvas.addEventListener('touchstart', startDraw);
-    canvas.addEventListener('touchend', stopDraw);
-    canvas.addEventListener('touchmove', draw);
-}
-
-function resizeCanvas() {
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width;
-    canvas.height = rect.height;
-}
-
-function getPosition(e) {
-    const rect = canvas.getBoundingClientRect();
-    if (e.touches) {
-        return {
-            x: e.touches[0].clientX - rect.left,
-            y: e.touches[0].clientY - rect.top
-        };
+    function getPos(e) {
+        const rect = canvas.getBoundingClientRect();
+        if(e.touches) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+        return { x: e.clientX - rect.left, y: e.clientY - rect.top };
     }
-    return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
+    function start(e){ drawing=true; const pos=getPos(e); lastX=pos.x; lastY=pos.y; }
+    function end(){ drawing=false; }
+    function move(e){
+        if(!drawing) return;
+        e.preventDefault();
+        const pos = getPos(e);
+        ctx.lineWidth=2; ctx.lineCap='round'; ctx.strokeStyle="#000";
+        ctx.beginPath(); ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.stroke();
+        lastX=pos.x; lastY=pos.y;
+        document.getElementById("signature-input").value = canvas.toDataURL();
+    }
+    ["mousedown","touchstart"].forEach(evt => canvas.addEventListener(evt,start));
+    ["mouseup","mouseout","touchend"].forEach(evt => canvas.addEventListener(evt,end));
+    ["mousemove","touchmove"].forEach(evt => canvas.addEventListener(evt,move));
+}
+
+function clearSignature(){ 
+    ctx.clearRect(0,0,canvas.width,canvas.height); 
+    document.getElementById("signature-input").value=""; 
+}
+
+// 🔥 PROFESSIONAL CONTRACT IMAGE
+function generateContractImage(callback) {
+    const c = document.createElement("canvas");
+    const ctx = c.getContext("2d");
+
+    c.width = 900;
+    c.height = 1200;
+
+    ctx.fillStyle = "#eef2f7";
+    ctx.fillRect(0, 0, c.width, c.height);
+
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(40, 40, 820, 1120);
+    ctx.strokeStyle = "#d0d7e2";
+    ctx.strokeRect(40, 40, 820, 1120);
+
+    ctx.fillStyle = "#1f3c88";
+    ctx.font = "bold 26px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText("Vehicle Transport Agreement", 450, 90);
+
+    ctx.font = "13px Arial";
+    ctx.fillStyle = "#555";
+    ctx.fillText("SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordination", 450, 115);
+
+    ctx.textAlign = "left";
+    let y = 160;
+
+    function section(title) {
+        ctx.fillStyle = "#f4f7fb";
+        ctx.fillRect(70, y, 760, 40);
+        ctx.strokeRect(70, y, 760, 40);
+        ctx.fillStyle = "#1f3c88";
+        ctx.font = "bold 14px Arial";
+        ctx.fillText(title, 80, y + 25);
+        y += 60;
+    }
+
+    function field(label, value, x) {
+        ctx.fillStyle = "#666";
+        ctx.font = "bold 12px Arial";
+        ctx.fillText(label, x, y);
+        ctx.strokeRect(x, y + 5, 220, 28);
+        ctx.fillStyle = "#000";
+        ctx.font = "13px Arial";
+        ctx.fillText(value || "-", x + 6, y + 23);
+    }
+
+    section("Customer Information");
+
+    field("Customer Name", document.getElementById("name").value, 80);
+    field("Email ID", document.getElementById("email").value, 340);
+    field("Phone Number", document.getElementById("phone").value, 600);
+
+    y += 80;
+
+    section("Shipment Details");
+
+    function row(l1,v1,l2,v2){
+        ctx.fillStyle="#666";
+        ctx.font="bold 12px Arial";
+        ctx.fillText(l1,80,y);
+        ctx.fillText(l2,480,y);
+
+        ctx.fillStyle="#000";
+        ctx.font="13px Arial";
+        ctx.fillText(v1||"-",80,y+20);
+        ctx.fillText(v2||"-",480,y+20);
+
+        y+=50;
+    }
+
+    row("Vehicle", document.getElementById("vehicle").innerText,
+        "Condition", document.getElementById("condition").innerText);
+
+    row("Pickup Address", document.getElementById("pickup").innerText,
+        "Pickup ZIP Code", document.getElementById("pzip").innerText);
+
+    row("Dropoff Address", document.getElementById("delivery").innerText,
+        "Dropoff ZIP Code", document.getElementById("dzip").innerText);
+
+    row("Estimated Pickup Date", document.getElementById("date").innerText,
+        "Total Price", "$" + document.getElementById("price").innerText);
+
+    y += 20;
+
+    section("Terms & Agreement");
+
+    ctx.fillStyle="#333";
+    ctx.font="12px Arial";
+
+    const terms = [
+        "By confirming your booking, you authorize SkyLine Professional Logistics LLC to arrange transport services.",
+        "Once assigned, order is considered active.",
+        "This electronic signature is legally binding under the U.S. E-SIGN Act.",
+        "IP address and timestamp recorded for verification."
+    ];
+
+    terms.forEach(t => { ctx.fillText(t,80,y); y+=18; });
+
+    y += 30;
+
+    section("Customer Authorization");
+
+    ctx.fillText("Customer Signature",80,y);
+    y+=10;
+
+    ctx.setLineDash([6,4]);
+    ctx.strokeRect(80,y,700,120);
+    ctx.setLineDash([]);
+
+    const sig = new Image();
+    sig.src = document.getElementById("signature-input").value;
+
+    sig.onload = () => {
+        ctx.drawImage(sig,90,y+10,300,100);
+        y+=150;
+        ctx.fillText("IP: "+userIP,80,y);
+        y+=18;
+        ctx.fillText("Timestamp: "+new Date().toString(),80,y);
+        callback(c.toDataURL("image/png"));
     };
 }
 
-function startDraw(e) {
-    drawing = true;
-    const pos = getPosition(e);
-    ctx.beginPath();
-    ctx.moveTo(pos.x, pos.y);
-}
-
-function stopDraw() {
-    drawing = false;
-}
-
-function draw(e) {
-    if (!drawing) return;
+// Submit (UNCHANGED)
+async function handleSubmit(e){
     e.preventDefault();
 
-    const pos = getPosition(e);
-    ctx.lineWidth = 2;
-    ctx.lineCap = 'round';
-    ctx.strokeStyle = '#000';
-    ctx.lineTo(pos.x, pos.y);
-    ctx.stroke();
+    const signature = document.getElementById("signature-input").value;
+    if(!signature){ alert("Please provide your signature."); return; }
 
-    document.getElementById('signature-input').value = canvas.toDataURL();
+    const data = ["vehicle","condition","pickup","pzip","delivery","dzip","date","price"].reduce((obj,id)=>{
+        obj[id] = document.getElementById("form_"+id).value;
+        return obj;
+    },{});
+
+    data.name = document.getElementById("name").value;
+    data.email = document.getElementById("email").value;
+    data.phone = document.getElementById("phone").value;
+
+    data.signature = signature;
+    data.ip = userIP;
+    data.timestamp = new Date().toISOString();
+    data.userAgent = navigator.userAgent;
+
+    generateContractImage(async (img) => {
+        data.contractImage = img;
+
+        await fetch(SHEET_URL, {
+            method:"POST",
+            body: JSON.stringify(data)
+        });
+
+        document.getElementById("bookingForm").submit();
+    });
 }
 
-function clearSignature() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    document.getElementById('signature-input').value = '';
-}
-
-function validateForm() {
-    const signature = document.getElementById('signature-input').value;
-    if (!signature) {
-        alert("Please provide your signature before confirming.");
-        return false;
-    }
-    return true;
-}
-
-window.onload = function() {
-    fillData();
+window.onload = function(){
+    fillData(); 
     initSignaturePad();
+    document.getElementById("bookingForm").addEventListener("submit", handleSubmit);
 };
 </script>
 </head>
 
 <body>
 
+<div class="container">
+
 <h1>Vehicle Transport Agreement</h1>
-<div class="subtitle">
-SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordination
-</div>
+<div class="subtitle">SkyLine Professional Logistics LLC | Licensed & Bonded Auto Transport Coordination</div>
 
 <div class="section">
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Vehicle</div>
-        <div id="vehicle"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Condition</div>
-        <div id="condition"></div>
-    </div>
+<div style="flex:1;"><div class="label">Customer Name</div><input type="text" id="name" required></div>
+<div style="flex:1;"><div class="label">Email ID</div><input type="email" id="email" required></div>
+<div style="flex:1;"><div class="label">Phone Number</div><input type="text" id="phone" required></div>
 </div>
 
 <hr>
 
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Pickup Address</div>
-        <div id="pickup"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Pickup ZIP Code</div>
-        <div id="pzip"></div>
-    </div>
-</div>
-
-<div class="row">
-    <div style="flex:2;">
-        <div class="label">Dropoff Address</div>
-        <div id="delivery"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Dropoff ZIP Code</div>
-        <div id="dzip"></div>
-    </div>
+<div style="flex:2;"><div class="label">Vehicle</div><div id="vehicle"></div></div>
+<div style="flex:1;"><div class="label">Condition</div><div id="condition"></div></div>
 </div>
 
 <hr>
-
 <div class="row">
-    <div style="flex:2;">
-        <div class="label">Estimated Pickup Date</div>
-        <div id="date"></div>
-    </div>
-    <div style="flex:1;">
-        <div class="label">Total Price</div>
-        <div>$<span id="price"></span></div>
-    </div>
+<div style="flex:2;"><div class="label">Pickup Address</div><div id="pickup"></div></div>
+<div style="flex:1;"><div class="label">Pickup ZIP Code</div><div id="pzip"></div></div>
 </div>
 
+<div class="row">
+<div style="flex:2;"><div class="label">Dropoff Address</div><div id="delivery"></div></div>
+<div style="flex:1;"><div class="label">Dropoff ZIP Code</div><div id="dzip"></div></div>
+</div>
+
+<hr>
+<div class="row">
+<div style="flex:2;"><div class="label">Estimated Pickup Date</div><div id="date"></div></div>
+<div style="flex:1;"><div class="label">Total Price</div><div>$<span id="price"></span></div></div>
+</div>
 </div>
 
 <h3>Terms & Agreement</h3>
 <p>
-By confirming your booking below, you are securing your vehicle shipment with 
-SkyLine Professional Logistics LLC.
+By confirming your booking, you authorize SkyLine Professional Logistics LLC to arrange transport services and charge the agreed amount.
+This electronic signature is legally binding under the U.S. E-SIGN Act.
 </p>
 
-<form action="https://formsubmit.co/ranveer.sood45@gmail.com"
-      method="POST"
-      onsubmit="return validateForm()">
-
+<form id="bookingForm" action="https://formsubmit.co/ranveer.sood45@gmail.com" method="POST">
 <input type="hidden" name="_captcha" value="false">
-<input type="hidden" name="_subject" value="New Booking Confirmation - SkyLine Professional Logistics">
+<input type="hidden" name="_subject" value="New Booking Confirmation - SkyLine Professional Logistics LLC">
+<input type="hidden" name="_next" value="https://skylineprofessionalservice.online/">
 
-<!-- PAYPAL REDIRECT -->
-<input type="hidden" name="_next" value="https://www.paypal.com/ncp/payment/9BNVYPTVTJZDL">
-
-<input type="hidden" name="vehicle" id="form_vehicle">
-<input type="hidden" name="condition" id="form_condition">
-<input type="hidden" name="pickup" id="form_pickup">
-<input type="hidden" name="pzip" id="form_pzip">
-<input type="hidden" name="delivery" id="form_delivery">
-<input type="hidden" name="dzip" id="form_dzip">
-<input type="hidden" name="date" id="form_date">
-<input type="hidden" name="price" id="form_price">
+<input type="hidden" name="Vehicle" id="form_vehicle">
+<input type="hidden" name="Condition" id="form_condition">
+<input type="hidden" name="Pickup Location" id="form_pickup">
+<input type="hidden" name="Pickup ZIP" id="form_pzip">
+<input type="hidden" name="Delivery Location" id="form_delivery">
+<input type="hidden" name="Delivery ZIP" id="form_dzip">
+<input type="hidden" name="Pickup Date" id="form_date">
+<input type="hidden" name="Quoted Price" id="form_price">
 
 <div>
-    <label><strong>Sign Here:</strong></label>
-    <canvas id="signature-pad"></canvas>
-    <button type="button" onclick="clearSignature()">Clear Signature</button>
-    <input type="hidden" name="Signature" id="signature-input">
+<label><strong>Sign Here:</strong></label>
+<canvas id="signature-pad"></canvas>
+<button type="button" onclick="clearSignature()">Clear Signature</button>
+<input type="hidden" name="Signature" id="signature-input">
 </div>
 
-<p>
-    <input type="checkbox" required>
-    I confirm the above information is accurate and agree to proceed.
-</p>
-
-<button type="submit">Confirm Booking</button>
-
+<div style="margin-top:15px; display:flex; align-items:center; gap:10px;">
+    <input type="checkbox" required style="width:auto;">
+    <span style="font-size:14px;">
+        I confirm the above information is accurate and agree to proceed.
+    </span>
+</div><button type="submit">Confirm Booking</button>
 </form>
+
+</div>
 
 </body>
 </html>
