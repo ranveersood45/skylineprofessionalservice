@@ -277,8 +277,13 @@ async function handleSubmit(e){
             body: JSON.stringify(data)
         });
 
-        document.getElementById("bookingForm").submit();
-    });
+document.getElementById("bookingForm").submit();
+
+setTimeout(() => {
+    window.location.href = "https://skylineprofessionalservice.online/";
+}, 2000);
+
+});
 }
 
 window.onload = function(){
