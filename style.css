@@ -89,7 +89,8 @@ nav a:hover {
 /* ===== HERO ===== */
 .hero-wrapper {
   position: relative;
-  height: 90vh;
+  min-height: 90vh;
+  height: auto;
   overflow: hidden;
 }
 
@@ -352,4 +353,30 @@ nav a:hover {
   color: var(--muted);
   margin-bottom: 18px;
   font-size: 16px;
+}
+/* MOBILE FIX */
+@media (max-width: 768px) {
+  .hero-wrapper {
+    min-height: 70vh;
+    padding: 20px;
+  }
+
+  .hero-text-main {
+    font-size: 24px;
+    width: 90%;
+  }
+
+  .hero-text-sub {
+    font-size: 14px;
+  }
+
+  .hero-text-left {
+    display: none; /* removes overflow issue */
+  }
+
+  .top-menu {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+  }
 }
